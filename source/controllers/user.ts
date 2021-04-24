@@ -7,19 +7,7 @@ import IUser from '../interfaces/user';
 import IMySQLResult from '../interfaces/result';
 import connDB from '../config/knexPG';
 
-// const connDB = knex({
-//   client: 'pg',
-//   version: '7.2',
-//   connection: {
-//     host: 'localhost',
-//     user: 'postgres',
-//     password: '789456',
-//     database: 'todo'
-//   }
-// });
-// console.log(connDB);
-
-const NAMESPACE = 'Users';
+const NAMESPACE = 'controller users';
 
 const validateToken = async (req: Request, res: Response, next: NextFunction) => {
   logging.info(NAMESPACE, 'Token validated, user authorized');
@@ -75,7 +63,7 @@ const register = async (req: Request, res: Response, next: NextFunction) => {
 };
 
 const login = async (req: Request, res: Response, next: NextFunction) => {
-  
+
   try {
     let { username, password } = req.body;
 
