@@ -36,15 +36,12 @@ router.post('/add', async (req: IRequest, res: Response) => {
 // Get All todos by user ${username}
 router.get('/all', async (req: Request, res: Response) => {
   try {
-
     assertIRequest(req);
 
     const username = req.user.userName;
     const idUser = req.user.idUser;
 
     let todos = await connDB.select('*').from('todos').where('user_id', idUser);
-
-    // console.log(connDB.select('*').from('todos').where('user_id', idUser).toString());
 
     return res.status(200).json({
       message: true,
@@ -104,7 +101,6 @@ router.post('/edit/:id', async (req: IRequest, res: Response, next: NextFunction
 router.post('/remove/:id', async (req: IRequest, res: Response) => {
   try {
     const idTask = req.params.id;
-
     const username = req.user.userName;
     const idUser = req.user.idUser;
 
@@ -131,18 +127,12 @@ router.post('/mark/:id', async (req: Request, res: Response, next: NextFunction)
     assertIRequest(req);
 
     let idTask = req.params.id;
-    // if (!idTask) {
-    //   return res.status(404).json({
-    //     message: 'Not found task by ID'
-    //   });
-    // }
 
     const username = req.user.userName;
     const idUser = req.user.idUser;
 
     const isDone: any = await connDB.select('is_completed').from('todos').where('id', idTask);
     let isComplete = isDone[0].is_completed;
-    // console.log();
 
     await connDB('todos').where('id', idTask).update('is_completed', !isComplete);
     const result = await connDB.select('*').from('todos').where('id', idTask);
@@ -161,8 +151,8 @@ router.post('/mark/:id', async (req: Request, res: Response, next: NextFunction)
   }
 });
 
-router.post('/mark/all', async (req: IRequest, res: Response, next: NextFunction) => {
-
+router.post('/mark/all', async (req: Request, res: Response, next: NextFunction) => {
+  assertIRequest(req)
 });
 
 
