@@ -1,4 +1,4 @@
-# todo-for-not-all
+# todo-with-auth
 Auth
 
  Register user                  POST /api/v1/signup
