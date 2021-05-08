@@ -16,7 +16,7 @@ const signJWT = async (user: IUser, callback: (error: Error | null, token: strin
   logging.info(NAMESPACE, `Attempting to sign token for ${user.username}`); // Попытка подписать токен для user
 
   try {
-    await jwt.sign({username: user.username}, config.server.token.secret, {
+    jwt.sign({username: user.username}, config.server.token.secret, {
       issuer: config.server.token.issuer,
       algorithm: 'HS256',
       expiresIn: '24h' // expire time 1 hour

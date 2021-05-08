@@ -4,6 +4,7 @@ import bcryptjs from 'bcryptjs';
 import signJWT from '../functions/signJWT';
 import IUser from '../interfaces/user';
 import { validationResult } from 'express-validator';
+import IRequest from '../interfaces/index';
 
 import connDB from '../config/knexPG';
 
@@ -13,15 +14,15 @@ interface IdUser {
 
 const NAMESPACE = 'controller users';
 
-const validateToken = async (req: Request, res: Response, next: NextFunction) => {
+const validateToken = async (req: IRequest, res: Response, next: NextFunction) => {
 
   logging.info(NAMESPACE, 'Token validated, user authorized');
-
-  // console.log(res.locals.jwt);
+  const dateNow = (new Date(Date.now())).toISOString();
 
   return res.status(200).json({
     message: 'Token(s) validated',
-    jwt: res.locals.jwt
+    dateNow: dateNow,
+    user: req.user
   });
 };
 

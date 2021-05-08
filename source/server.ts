@@ -7,7 +7,7 @@ import taskRoutes from './routes/tasks'
 
 const NAMESPACE = 'Server.ts';
 
-const app: Application = express();
+const app = express();
 
 /** Logging request */
 app.use((req, res, next) => {
@@ -22,7 +22,6 @@ app.use((req, res, next) => {
 
 /** Parse request */
 app.use(bodyParser.urlencoded({ extended: true }));
-
 app.use(bodyParser.json());
 
 /** Rules of our API */
@@ -38,7 +37,7 @@ app.use((req, res, next) => {
 });
 
 /** Routes */
-app.use('/api/v1/', userRoutes);
+app.use('/api/v1/user', userRoutes);
 app.use('/api/v1/todo', taskRoutes)
 
 /** Error Handling */
