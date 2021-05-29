@@ -6,6 +6,7 @@ import IUser from '../interfaces/user';
 import { validationResult } from 'express-validator';
 import IRequest from '../interfaces/index';
 
+
 import connDB from '../config/knexPG';
 
 interface IdUser {
@@ -54,8 +55,13 @@ const register = async (req: Request, res: Response, next: NextFunction) => {
 
 const login = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    let { username, password } = req.body;
+    const errors = validationResult(req);
 
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ message: 'Error on registration', errors });
+    }
+
+    let { username, password } = req.body;
     const user: IUser = await connDB('users').first('*').where({ username: username });
 
     // passwordni tekshirish
@@ -115,4 +121,14 @@ const getAllUsers = async (req: Request, res: Response, next: NextFunction) => {
   }
 };
 
-export default { validateToken, register, login, getAllUsers };
+const logout = async (req: IRequest, res: Response, next: NextFunction) => {
+  try {
+    console.log(req.user.token);
+    // jwt.destroy()
+  } catch (e) {
+    console.log(e);
+    res.status(500).send('SOMETHING BROKE in logout user');
+  }
+};
+
+export default { validateToken, register, login, getAllUsers, logout };

@@ -7,7 +7,7 @@ import taskRoutes from './routes/tasks'
 
 const NAMESPACE = 'Server.ts';
 
-const app = express();
+const app: Application = express();
 
 /** Logging request */
 app.use((req, res, next) => {

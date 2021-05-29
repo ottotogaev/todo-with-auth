@@ -2,10 +2,12 @@ import express, { Request, Response, NextFunction } from 'express';
 import extractJWT from '../middleware/exractJWT';
 import IRequest from '../interfaces/index';
 import connDB from '../config/knexPG';
+import IUser from '../interfaces/user';
 
 const router = express.Router();
 
 router.use(extractJWT);
+
 /*
 * api/v1/todo/all         GET
 * api/v1/todo/add         POST
@@ -17,34 +19,65 @@ router.use(extractJWT);
 * api/v1/todo/mark/all    POST
 * */
 
+// enum priority {
+//   low = 1,
+//   middle, // 2
+//   high // 3
+// }
+
+
 //  Insert
 router.post('/add', async (req: IRequest, res: Response, next: NextFunction) => {
-  assertIRequest(req);
+  // assertIRequest(req);
   try {
-    const { text, desc, date } = req.body;
-    let dead_date = new Date(date * 1000);
 
-    console.log(dead_date);
+    //* Dead line is UNIX_TIMESTAMP */
 
-    if (!text || !dead_date) {
-      return res.status(404).json('Please typing smth');
-    }
+    // const { text, desc, dead_line, priority } = req.body;
+    // console.log(text);
 
-    const username = req.user.username;
+    // let dead_date = new Date(dead_line * 1000);
+    // if (!text || !dead_date) {
+    //   return res.status(404).json('Please typing smth');
+    // }
+    //
+
+    const username = req.user.userName;
     const idUser = req.user.idUser;
+    console.log();
+    // Insert
+    // await connDB('todos').insert({
+    //   tasks: text,
+    //   user_id: idUser,
+    //   deadline_date: dead_date,
+    //   description: desc,
+    //   priority: priority
+    // });
 
-    await connDB('todos').insert({ tasks: text, user_id: idUser, dead_date: dead_date, description: desc });
+    // const result = connDB('todos').select('*').where({ user_id: idUser });
+    const result = await connDB.select('*').from('todos').where('user_id', idUser);
 
+    //  return res.status(200).json({
+    //   message: `Task added successfully to ${username}`,
+    //   result: result
+    // });
+
+    console.log(result);
     return res.status(200).json({
-      message: `Task added successfully to ${username}`,
-      deadline: dead_date
+      userid: idUser,
+      username: username,
+      result: result
     });
 
   } catch (e) {
     console.log(e);
-    res.status(500).send('Something broke');
+    res.status(500).json({
+      error: e
+    })
   }
+
 });
+
 
 // Get All todos by user ${username}
 router.get('/all', async (req: IRequest, res: Response) => {
@@ -99,7 +132,7 @@ router.post('/edit/:id', async (req: IRequest, res: Response, next: NextFunction
 
     await connDB('todos').where('id', idTask).update('tasks', text);
 
-    const result = await connDB.select('*').from('tod os').where('id', idTask);
+    const result = await connDB.select('*').from('todos').where('id', idTask);
 
     return res.status(200).json({
       message: 'Updating accepted',
@@ -143,25 +176,34 @@ router.post('/mark/:id', async (req: IRequest, res: Response, next: NextFunction
     const username = req.user.userName;
     const idUser = req.user.idUser;
     const dateNow = new Date(Date.now());
+
     // Get dead_date
-    const query = await connDB.select('is_completed', 'dead_date').from('todos').where('id', idTask);
-    const dead_date = query[0].dead_date.getTime() / 1000;
+    // const query = await connDB.select('is_completed', 'deadline_date').from('todos').where('id', idTask);
+    // const user: IUser = await connDB('users').first('*').where({ username: username }); // boolean
+
+    const query = await connDB('todos').first('is_completed', 'deadline_date').where({ 'id': idTask });
+    const dead_date = query.deadline_date.getTime() / 1000;
 
     let alertMessage: string;
-
-    if (Math.floor(dateNow.getTime() / 1000) > dead_date) {
-      alertMessage = `Vazifa o'z vaqtida bajarilmadi :(`;
-      console.log(alertMessage);
-    } else {
-      alertMessage = `Vazifa o'z vaqtida bajarildi`;
-      console.log(alertMessage);
-    }
-
-    let isComplete = query[0].is_completed;
+    let isComplete = query.is_completed;
     console.log(`isComplete: `, isComplete);
 
-    // Update
-    await connDB('todos').where('id', idTask).update({ 'is_completed': !isComplete, complete_date: dateNow });
+    if (isComplete) {
+      // Update
+      alertMessage = 'Vazifa qaytadan quyildi';
+      await connDB('todos').where('id', idTask).update({ 'is_completed': !isComplete, created_at: dateNow });
+    } else {
+      if (Math.floor(dateNow.getTime() / 1000) > dead_date) {
+        alertMessage = `Vazifa o'z vaqtida bajarilmadi :(`;
+        console.log(alertMessage);
+      } else {
+        alertMessage = `Vazifa o'z vaqtida bajarildi`;
+        console.log(alertMessage);
+      }
+      // Update
+      await connDB('todos').where('id', idTask).update({ 'is_completed': !isComplete, complete_date: dateNow });
+    }
+
     const result = await connDB.select('*').from('todos').where('id', idTask);
 
     return res.status(200).json({
@@ -200,7 +242,38 @@ router.post('/mark/all', async (req: IRequest, res: Response, next: NextFunction
       message: 'Something broke Mark all items'
     });
   }
+});
 
+
+router.get('/getToday', async (req: IRequest, res: Response) => {
+  try {
+    // current date
+    const currentDate = new Date();
+    const current = currentDate.getFullYear() + '-' + (currentDate.getMonth() + 1) + '-' + currentDate.getDate();
+
+    console.log('dayToday:', currentDate.getFullYear());
+
+    const username = req.user.username;
+    const idUser = req.user.idUser;
+
+
+    // select deadline_date from todos
+    // where deadline_date::date = cast(current_date as Date) and user_id = ${idUser}
+
+    const selectAll = await connDB.select('id', 'tasks', 'is_completed', 'deadline_date', 'created_at', 'description').from('todos').whereRaw(`deadline_date::date = current_date AND user_id = ${idUser}`);
+
+    res.status(200).json({
+      message: true,
+      result: selectAll
+    });
+
+  } catch (e) {
+    console.log(e);
+    res.status(500).json({
+      message: false,
+      error: e
+    });
+  }
 });
 
 

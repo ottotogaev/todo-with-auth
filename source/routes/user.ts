@@ -17,8 +17,11 @@ router.post('/signup', [
   check('username', 'Username don\'t must empty').notEmpty(),
   check('password', 'Password mini 4, max 12').isLength({ min: 4, max: 12 })
 ], controller.register);
-router.post('/login', controller.login);
+router.post('/login',[
+  check('username', 'Username don\'t must empty').notEmpty(),
+], controller.login);
 router.get('/all', controller.getAllUsers);
+router.get('/logout', extractJWT, controller.logout);
 
 
 export = router;
